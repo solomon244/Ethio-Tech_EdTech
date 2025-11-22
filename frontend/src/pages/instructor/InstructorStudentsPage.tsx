@@ -24,6 +24,7 @@ const InstructorStudentsPage = () => {
         // Load progress for each student
         const progressPromises = enrollmentsData.map((enrollment) => {
           const studentId = typeof enrollment.student === 'object' ? (enrollment.student._id || enrollment.student.id) : enrollment.student;
+          if (!studentId) return { studentId: '', progress: [] };
           return fetchCourseProgress(courseId).then((progress) => {
             const studentProgress = progress.filter(
               (p) => typeof p.student === 'object' && (p.student._id || p.student.id) === studentId
@@ -34,7 +35,9 @@ const InstructorStudentsPage = () => {
         const progressResults = await Promise.all(progressPromises);
         const progressMapData: Record<string, Progress[]> = {};
         progressResults.forEach(({ studentId, progress }) => {
-          progressMapData[studentId] = progress;
+          if (studentId) {
+            progressMapData[studentId] = progress;
+          }
         });
         setProgressMap(progressMapData);
       } catch (err) {
@@ -78,7 +81,9 @@ const InstructorStudentsPage = () => {
           {enrollments.map((enrollment) => {
             const student = typeof enrollment.student === 'object' ? enrollment.student : null;
             if (!student) return null;
-            const progress = calculateProgress(student._id || student.id);
+            const studentId = student._id || student.id;
+            if (!studentId) return null;
+            const progress = calculateProgress(studentId);
 
             return (
               <div key={enrollment._id || enrollment.id} className="flex items-center justify-between py-4">

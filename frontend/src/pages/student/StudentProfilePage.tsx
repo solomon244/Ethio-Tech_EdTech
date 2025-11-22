@@ -9,7 +9,7 @@ const StudentProfilePage = () => {
     <form className="space-y-6">
       <div className="flex items-center gap-6">
         <img
-          src={user?.avatar ?? 'https://i.pravatar.cc/150?img=60'}
+          src={user?.profileImage ?? 'https://i.pravatar.cc/150?img=60'}
           alt={user?.firstName}
           className="h-24 w-24 rounded-2xl object-cover"
         />

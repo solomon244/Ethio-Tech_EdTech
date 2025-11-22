@@ -7,8 +7,9 @@ const startServer = async () => {
   await connectDatabase();
 
   const server = http.createServer(app);
-  server.listen(env.port, () => {
-    console.log(`🚀 Ethio Tech Hub API running on port ${env.port}`);
+  const port = process.env.PORT || env.port;
+  server.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Ethio Tech Hub API running on port ${port}`);
   });
 };
 

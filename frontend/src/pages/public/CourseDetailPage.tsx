@@ -73,7 +73,7 @@ const CourseDetailPage = () => {
   const categoryName = typeof course.category === 'object' ? course.category.name : course.category;
   const instructorName = typeof course.instructor === 'object' 
     ? `${course.instructor.firstName} ${course.instructor.lastName}`
-    : course.instructor?.name || 'Unknown Instructor';
+    : 'Unknown Instructor';
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-12">

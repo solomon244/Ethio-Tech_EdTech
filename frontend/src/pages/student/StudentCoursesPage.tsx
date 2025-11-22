@@ -24,12 +24,15 @@ const StudentCoursesPage = () => {
         // Load progress for each course
         const progressPromises = enrollmentsData.map((enrollment) => {
           const courseId = typeof enrollment.course === 'object' ? (enrollment.course._id || enrollment.course.id) : enrollment.course;
+          if (!courseId) return { courseId: '', progress: [] };
           return fetchCourseProgress(courseId).then((progress) => ({ courseId, progress }));
         });
         const progressResults = await Promise.all(progressPromises);
         const progressMapData: Record<string, Progress[]> = {};
         progressResults.forEach(({ courseId, progress }) => {
-          progressMapData[courseId] = progress;
+          if (courseId) {
+            progressMapData[courseId] = progress;
+          }
         });
         setProgressMap(progressMapData);
       } catch (err) {
@@ -73,7 +76,8 @@ const StudentCoursesPage = () => {
       {enrollments.map((enrollment) => {
         const course = typeof enrollment.course === 'object' ? enrollment.course : null;
         if (!course) return null;
-        const courseId = course.id;
+        const courseId = course._id || course.id;
+        if (!courseId) return null;
         const progress = calculateProgress(courseId);
         const categoryName = typeof course.category === 'object' ? course.category.name : course.category;
 
