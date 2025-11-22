@@ -16,17 +16,17 @@ const levelOptions = [
 ];
 
 const CoursesPage = () => {
-  const [level, setLevel] = useState('all');
-  const [category, setCategory] = useState('all');
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [level, setLevel] = useState('all');
+  const [category, setCategory] = useState('all');
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoading(true);
+        setLoading(true);
         setError(null);
         const [coursesData, categoriesData] = await Promise.all([
           fetchCourses({ isPublished: true }),
@@ -36,8 +36,9 @@ const CoursesPage = () => {
         setCategories(categoriesData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load courses');
+        console.error('Failed to load courses:', err);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
     loadData();
@@ -54,17 +55,15 @@ const CoursesPage = () => {
   const filteredCourses = useMemo(() => {
     return courses.filter((course) => {
       const levelMatch = level === 'all' || course.level === level;
-      const categoryMatch = category === 'all' || course.category === category;
+      const categoryMatch = category === 'all' || (typeof course.category === 'object' ? course.category.id === category : course.category === category);
       return levelMatch && categoryMatch;
     });
   }, [courses, level, category]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <div className="flex min-h-[50vh] items-center justify-center">
-          <p className="text-sm font-semibold text-stone-500">Loading courses...</p>
-        </div>
+        <div className="text-center">Loading courses...</div>
       </div>
     );
   }
@@ -72,9 +71,7 @@ const CoursesPage = () => {
   if (error) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <div className="flex min-h-[50vh] items-center justify-center">
-          <p className="text-sm font-semibold text-danger">Error: {error}</p>
-        </div>
+        <div className="text-center text-red-600">Error: {error}</div>
       </div>
     );
   }
@@ -111,45 +108,40 @@ const CoursesPage = () => {
       </div>
 
       {filteredCourses.length === 0 ? (
-        <div className="flex min-h-[30vh] items-center justify-center">
-          <p className="text-sm font-semibold text-stone-500">No courses found</p>
-        </div>
+        <div className="text-center text-stone-500">No courses found</div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
-          {filteredCourses.map((course) => (
-            <Card key={course.id} className="space-y-4">
-              <img
-                src={course.thumbnailUrl || 'https://via.placeholder.com/400x200'}
-                alt={course.title}
-                className="h-48 w-full rounded-2xl object-cover"
-              />
-              <div className="flex flex-wrap gap-3">
-                <Badge variant="info">
-                  {typeof course.category === 'string' ? course.category : categories.find((c) => c.id === course.category)?.name || 'Uncategorized'}
-                </Badge>
-                <Badge variant="success">{course.level}</Badge>
-              </div>
-              <h2 className="text-2xl font-display font-semibold text-stone-900">{course.title}</h2>
-              <p className="text-sm text-stone-500">{course.description}</p>
-              <div className="grid grid-cols-3 gap-4 text-center text-sm font-semibold text-stone-600">
-                <div>
-                  <p className="text-2xl font-display text-stone-900">{course.stats?.lessons || 0}</p>
-                  <p>Lessons</p>
+          {filteredCourses.map((course) => {
+            const categoryName = typeof course.category === 'object' ? course.category.name : course.category;
+            return (
+              <Card key={course.id} className="space-y-4">
+                <img src={course.thumbnailUrl || '/placeholder-course.jpg'} alt={course.title} className="h-48 w-full rounded-2xl object-cover" />
+                <div className="flex flex-wrap gap-3">
+                  <Badge variant="info">{categoryName}</Badge>
+                  <Badge variant="success">{course.level}</Badge>
                 </div>
-                <div>
-                  <p className="text-2xl font-display text-stone-900">{course.stats?.duration || 'N/A'}</p>
-                  <p>Duration</p>
+                <h2 className="text-2xl font-display font-semibold text-stone-900">{course.title}</h2>
+                <p className="text-sm text-stone-500">{course.description}</p>
+                <div className="grid grid-cols-3 gap-4 text-center text-sm font-semibold text-stone-600">
+                  <div>
+                    <p className="text-2xl font-display text-stone-900">{course.totalLessons || 0}</p>
+                    <p>Lessons</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-display text-stone-900">{course.totalDuration || 0}h</p>
+                    <p>Duration</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-display text-stone-900">-</p>
+                    <p>Learners</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-display text-stone-900">{course.stats?.students || 0}</p>
-                  <p>Learners</p>
-                </div>
-              </div>
-              <Button asChild fullWidth className="py-3 text-base">
-                <Link to={`/courses/${course.id}`}>See details</Link>
-              </Button>
-            </Card>
-          ))}
+                <Button asChild fullWidth className="py-3 text-base">
+                  <Link to={`/courses/${course._id || course.id}`}>See details</Link>
+                </Button>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

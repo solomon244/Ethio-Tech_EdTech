@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaArrowRight, FaPlayCircle, FaShieldAlt } from 'react-icons/fa';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import StatCard from '../../components/common/StatCard';
-import { featuredCourses, heroStats } from '../../data/mockData';
+import { fetchCourses } from '../../services/courseService';
+import type { Course, DashboardStat } from '../../types';
 
 const valueProps = [
   {
@@ -24,6 +26,44 @@ const valueProps = [
 ];
 
 const HomePage = () => {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const data = await fetchCourses({ isPublished: true });
+        setCourses(data.slice(0, 4)); // Show only first 4 featured courses
+      } catch (err) {
+        console.error('Failed to load courses:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCourses();
+  }, []);
+
+  const heroStats: DashboardStat[] = [
+    {
+      id: '1',
+      label: 'Active Students',
+      value: '1,200+',
+      trend: 'up',
+    },
+    {
+      id: '2',
+      label: 'Courses Available',
+      value: courses.length,
+      trend: 'up',
+    },
+    {
+      id: '3',
+      label: 'Completion Rate',
+      value: '94%',
+      trend: 'up',
+    },
+  ];
+
   return (
     <div className="space-y-20 py-12">
       <section className="mx-auto flex max-w-6xl flex-col gap-10 px-4 lg:flex-row">
@@ -80,38 +120,47 @@ const HomePage = () => {
             Cohort-based experiences blending modern tooling with Ethiopian context.
           </p>
         </div>
-        <div className="mt-10 grid gap-8 lg:grid-cols-2">
-          {featuredCourses.map((course) => (
-            <Card key={course.id} className="space-y-5">
-              <div className="flex flex-col gap-6 md:flex-row">
-                <img
-                  src={course.thumbnailUrl}
-                  alt={course.title}
-                  className="h-52 w-full rounded-2xl object-cover md:h-40 md:w-56"
-                />
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
-                    <span>{course.category}</span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary/60" />
-                    <span className="capitalize">{course.level}</span>
+        {loading ? (
+          <div className="text-center py-12">Loading featured courses...</div>
+        ) : courses.length === 0 ? (
+          <div className="text-center py-12 text-stone-500">No courses available yet.</div>
+        ) : (
+          <div className="mt-10 grid gap-8 lg:grid-cols-2">
+            {courses.map((course) => {
+              const categoryName = typeof course.category === 'object' ? course.category.name : course.category;
+              return (
+                <Card key={course._id || course.id} className="space-y-5">
+                  <div className="flex flex-col gap-6 md:flex-row">
+                    <img
+                      src={course.thumbnailUrl || '/placeholder-course.jpg'}
+                      alt={course.title}
+                      className="h-52 w-full rounded-2xl object-cover md:h-40 md:w-56"
+                    />
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
+                        <span>{categoryName}</span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary/60" />
+                        <span className="capitalize">{course.level}</span>
+                      </div>
+                      <h3 className="text-2xl font-display font-semibold text-stone-900">{course.title}</h3>
+                      <p className="text-sm text-stone-500">{course.description}</p>
+                      <div className="flex flex-wrap gap-3 text-xs font-semibold text-stone-500">
+                        {course.tags?.map((tag) => (
+                          <span key={tag} className="rounded-full bg-stone-100 px-3 py-1">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                      <Button asChild className="px-4 py-2 text-sm">
+                        <Link to={`/courses/${course._id || course.id}`}>View program</Link>
+                      </Button>
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-display font-semibold text-stone-900">{course.title}</h3>
-                  <p className="text-sm text-stone-500">{course.description}</p>
-                  <div className="flex flex-wrap gap-3 text-xs font-semibold text-stone-500">
-                    {course.tags?.map((tag) => (
-                      <span key={tag} className="rounded-full bg-stone-100 px-3 py-1">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                  <Button asChild className="px-4 py-2 text-sm">
-                    <Link to={`/courses/${course.id}`}>View program</Link>
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section className="mx-auto max-w-6xl px-4">
@@ -132,4 +181,5 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
 

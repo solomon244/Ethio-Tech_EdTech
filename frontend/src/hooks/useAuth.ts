@@ -1,6 +1,7 @@
 import { useAuthContext } from '../context/AuthContext';
 
-const useAuth = () => useAuthContext();
+export const useAuth = () => useAuthContext();
 
+// Also export as default for backward compatibility
 export default useAuth;
 

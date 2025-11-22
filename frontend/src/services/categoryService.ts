@@ -9,20 +9,27 @@ export interface CreateCategoryPayload {
   icon?: string;
 }
 
-export interface UpdateCategoryPayload extends Partial<CreateCategoryPayload> {}
-
 export const fetchCategories = async (): Promise<Category[]> => {
   const response = await apiClient.get('/categories');
   return unwrap<{ categories: Category[] }>(response).categories;
 };
 
-export const createCategory = async (payload: CreateCategoryPayload) => {
-  const response = await apiClient.post('/categories', payload);
-  return unwrap<{ category: Category }>(response);
+export const fetchCategory = async (categoryId: string): Promise<Category> => {
+  const response = await apiClient.get(`/categories/${categoryId}`);
+  return unwrap<{ category: Category }>(response).category;
 };
 
-export const updateCategory = async (categoryId: string, payload: UpdateCategoryPayload) => {
+export const createCategory = async (payload: CreateCategoryPayload): Promise<Category> => {
+  const response = await apiClient.post('/categories', payload);
+  return unwrap<{ category: Category }>(response).category;
+};
+
+export const updateCategory = async (categoryId: string, payload: Partial<CreateCategoryPayload>): Promise<Category> => {
   const response = await apiClient.patch(`/categories/${categoryId}`, payload);
-  return unwrap<{ category: Category }>(response);
+  return unwrap<{ category: Category }>(response).category;
+};
+
+export const deleteCategory = async (categoryId: string): Promise<void> => {
+  await apiClient.delete(`/categories/${categoryId}`);
 };
 

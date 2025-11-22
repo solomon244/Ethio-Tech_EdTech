@@ -48,11 +48,14 @@ const refreshTokens = async () => {
   }
 
   const response = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
+  // Backend returns: { success, statusCode, message, data: { tokens: { accessToken, refreshToken } } }
   const {
     data: {
-      tokens: { accessToken, refreshToken: nextRefreshToken },
+      data: {
+        tokens: { accessToken, refreshToken: nextRefreshToken },
+      },
     },
-  } = response.data;
+  } = response;
   persistTokens(accessToken, nextRefreshToken);
   return accessToken;
 };

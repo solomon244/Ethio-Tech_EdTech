@@ -10,8 +10,14 @@ export interface DashboardStats {
   enrollmentCount: number;
 }
 
-export interface UpdateInstructorStatusPayload {
-  status: 'approved' | 'rejected';
+export interface UpdateUserPayload {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: 'student' | 'instructor' | 'admin';
+  isEmailVerified?: boolean;
+  bio?: string;
+  skills?: string[];
 }
 
 export const fetchDashboardStats = async (): Promise<DashboardStats> => {
@@ -24,8 +30,22 @@ export const fetchUsers = async (): Promise<User[]> => {
   return unwrap<{ users: User[] }>(response).users;
 };
 
-export const updateInstructorStatus = async (instructorId: string, payload: UpdateInstructorStatusPayload) => {
-  const response = await apiClient.patch(`/admin/instructors/${instructorId}`, payload);
-  return unwrap<{ user: User }>(response);
+export const fetchUser = async (userId: string): Promise<User> => {
+  const response = await apiClient.get(`/admin/users/${userId}`);
+  return unwrap<{ user: User }>(response).user;
+};
+
+export const updateUser = async (userId: string, payload: UpdateUserPayload): Promise<User> => {
+  const response = await apiClient.patch(`/admin/users/${userId}`, payload);
+  return unwrap<{ user: User }>(response).user;
+};
+
+export const deleteUser = async (userId: string): Promise<void> => {
+  await apiClient.delete(`/admin/users/${userId}`);
+};
+
+export const updateInstructorStatus = async (instructorId: string, status: 'approved' | 'rejected'): Promise<User> => {
+  const response = await apiClient.patch(`/admin/instructors/${instructorId}`, { status });
+  return unwrap<{ user: User }>(response).user;
 };
 

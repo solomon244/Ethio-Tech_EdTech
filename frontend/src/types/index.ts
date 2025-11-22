@@ -1,14 +1,28 @@
 export type UserRole = 'student' | 'instructor' | 'admin';
 
 export interface User {
-  id: string;
+  _id: string;
+  id?: string; // For compatibility
   firstName: string;
   lastName: string;
   email: string;
   role: UserRole;
-  avatar?: string;
+  profileImage?: string;
   bio?: string;
+  skills?: string[];
   isEmailVerified?: boolean;
+  socialLinks?: {
+    youtube?: string;
+    linkedin?: string;
+    website?: string;
+  };
+  instructorProfile?: {
+    experienceYears?: number;
+    highlight?: string;
+    status?: 'pending' | 'approved' | 'rejected';
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthTokens {
@@ -24,33 +38,53 @@ export interface Category {
 }
 
 export interface Lesson {
-  id: string;
+  _id: string;
+  id?: string; // For compatibility
+  course: string; // Course ID
   title: string;
-  duration: string;
   description?: string;
+  order: number;
+  content?: string;
   videoUrl?: string;
-  resources?: string[];
+  duration?: number; // In minutes
+  resources?: Array<{
+    type: 'pdf' | 'doc' | 'link' | 'code';
+    title?: string;
+    url: string;
+  }>;
+  isPreviewable?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Course {
-  id: string;
+  _id: string;
+  id?: string; // For compatibility
   title: string;
   description: string;
-  category: string;
+  slug: string;
+  category: string | Category; // Can be populated
   level: 'beginner' | 'intermediate' | 'advanced';
-  thumbnailUrl: string;
-  instructor: {
-    name: string;
-    title: string;
-    avatar?: string;
-  };
-  stats: {
-    lessons: number;
-    students: number;
-    duration: string;
-  };
-  lessons: Lesson[];
+  language?: string;
+  thumbnailUrl?: string;
+  promoVideoUrl?: string;
+  instructor: string | {
+    _id: string;
+    id?: string;
+    firstName: string;
+    lastName: string;
+    bio?: string;
+    profileImage?: string;
+  }; // Can be populated
+  price: number;
+  isPublished: boolean;
+  requirements?: string[];
+  outcomes?: string[];
   tags?: string[];
+  totalDuration?: number;
+  totalLessons: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DashboardStat {
@@ -62,24 +96,62 @@ export interface DashboardStat {
   trend?: 'up' | 'down' | 'neutral';
 }
 
-export interface QuizQuestion {
-  question: string;
-  options: string[];
-  answerIndex: number;
+export interface Progress {
+  _id: string;
+  id?: string; // For compatibility
+  student: string | User; // Can be populated
+  lesson: string | Lesson; // Can be populated
+  course: string | Course; // Can be populated
+  status: 'not_started' | 'in_progress' | 'completed';
+  percentage: number;
+  lastVisitedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface QuizAttempt {
+  _id: string;
+  id?: string; // For compatibility
+  quiz: string | Quiz; // Can be populated
+  student: string | User; // Can be populated
+  score: number;
+  totalQuestions: number;
+  answers: Array<{
+    questionIndex: number;
+    selectedOptionIndex: number;
+    isCorrect: boolean;
+  }>;
+  completedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Quiz {
-  id: string;
+  _id: string;
+  id?: string; // For compatibility
+  lesson: string | Lesson; // Can be populated
   title: string;
-  lessonId: string;
-  questions: QuizQuestion[];
+  durationMinutes?: number;
+  questions: Array<{
+    prompt: string;
+    options: string[];
+    correctAnswerIndex: number;
+    explanation?: string;
+  }>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Enrollment {
-  id: string;
-  courseId: string;
-  progress: number;
-  lastLesson?: string;
-  updatedAt: string;
+  _id: string;
+  id?: string; // For compatibility
+  course: string | Course; // Can be populated
+  student: string | User; // Can be populated
+  status: 'active' | 'completed' | 'dropped';
+  progressPercentage: number;
+  lastLesson?: string | Lesson; // Can be populated
+  lastAccessedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
