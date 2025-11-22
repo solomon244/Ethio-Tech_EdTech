@@ -1,30 +1,97 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
-import { featuredCourses } from '../../data/mockData';
+import { fetchCourses } from '../../services/courseService';
+import { fetchCategories } from '../../services/categoryService';
+import useAuth from '../../hooks/useAuth';
+import type { Course, Category } from '../../types';
 
 const InstructorCoursesPage = () => {
+  const { user } = useAuth();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const [coursesData, categoriesData] = await Promise.all([
+          fetchCourses(), // Instructor's courses - backend should filter by instructor
+          fetchCategories(),
+        ]);
+        setCourses(coursesData);
+        setCategories(categoriesData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load courses');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadCourses();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[30vh] items-center justify-center">
+        <p className="text-sm font-semibold text-stone-500">Loading courses...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[30vh] items-center justify-center">
+        <p className="text-sm font-semibold text-danger">Error: {error}</p>
+      </div>
+    );
+  }
+
+  if (courses.length === 0) {
+    return (
+      <div className="flex min-h-[30vh] flex-col items-center justify-center space-y-4">
+        <p className="text-sm font-semibold text-stone-500">No courses yet</p>
+        <Button asChild>
+          <Link to="/instructor/courses/new">Create your first course</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {featuredCourses.map((course) => (
-        <Card key={course.id} className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase text-primary">{course.category}</p>
-              <h3 className="text-2xl font-semibold">{course.title}</h3>
+      {courses.map((course) => {
+        const categoryName =
+          typeof course.category === 'string'
+            ? course.category
+            : categories.find((c) => c.id === course.category)?.name || 'Uncategorized';
+        return (
+          <Card key={course.id} className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase text-primary">{categoryName}</p>
+                <h3 className="text-2xl font-semibold">{course.title}</h3>
+              </div>
+              <Button asChild variant="secondary">
+                <Link to={`/instructor/courses/${course.id}/edit`}>Edit course</Link>
+              </Button>
             </div>
-            <Button variant="secondary">Edit course</Button>
-          </div>
-          <p className="text-sm text-stone-500">{course.description}</p>
-          <div className="flex gap-6 text-sm">
-            <p>{course.stats.lessons} lessons</p>
-            <p>{course.stats.students} students</p>
-            <p>{course.stats.duration} total hours</p>
-          </div>
-        </Card>
-      ))}
+            <p className="text-sm text-stone-500">{course.description}</p>
+            <div className="flex gap-6 text-sm">
+              <p>{course.stats?.lessons || 0} lessons</p>
+              <p>{course.stats?.students || 0} students</p>
+              <p>{course.stats?.duration || 'N/A'} total hours</p>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 };
 
 export default InstructorCoursesPage;
+
 

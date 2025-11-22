@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import SelectField from '../../components/common/SelectField';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { featuredCourses } from '../../data/mockData';
+import { fetchCourses } from '../../services/courseService';
+import { fetchCategories } from '../../services/categoryService';
+import type { Course, Category } from '../../types';
 
 const levelOptions = [
   { label: 'All levels', value: 'all' },
@@ -13,25 +15,69 @@ const levelOptions = [
   { label: 'Advanced', value: 'advanced' },
 ];
 
-const categoryOptions = [
-  { label: 'All categories', value: 'all' },
-  ...Array.from(new Set(featuredCourses.map((course) => course.category))).map((category) => ({
-    label: category,
-    value: category,
-  })),
-];
-
 const CoursesPage = () => {
   const [level, setLevel] = useState('all');
   const [category, setCategory] = useState('all');
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const [coursesData, categoriesData] = await Promise.all([
+          fetchCourses({ isPublished: true }),
+          fetchCategories(),
+        ]);
+        setCourses(coursesData);
+        setCategories(categoriesData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load courses');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const categoryOptions = [
+    { label: 'All categories', value: 'all' },
+    ...categories.map((cat) => ({
+      label: cat.name,
+      value: cat.id,
+    })),
+  ];
 
   const filteredCourses = useMemo(() => {
-    return featuredCourses.filter((course) => {
+    return courses.filter((course) => {
       const levelMatch = level === 'all' || course.level === level;
       const categoryMatch = category === 'all' || course.category === category;
       return levelMatch && categoryMatch;
     });
-  }, [level, category]);
+  }, [courses, level, category]);
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <p className="text-sm font-semibold text-stone-500">Loading courses...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <p className="text-sm font-semibold text-danger">Error: {error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-12">
@@ -64,41 +110,52 @@ const CoursesPage = () => {
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {filteredCourses.map((course) => (
-          <Card key={course.id} className="space-y-4">
-            <img src={course.thumbnailUrl} alt={course.title} className="h-48 w-full rounded-2xl object-cover" />
-            <div className="flex flex-wrap gap-3">
-              <Badge variant="info">{course.category}</Badge>
-              <Badge variant="success" key="level">
-                {course.level}
-              </Badge>
-            </div>
-            <h2 className="text-2xl font-display font-semibold text-stone-900">{course.title}</h2>
-            <p className="text-sm text-stone-500">{course.description}</p>
-            <div className="grid grid-cols-3 gap-4 text-center text-sm font-semibold text-stone-600">
-              <div>
-                <p className="text-2xl font-display text-stone-900">{course.stats.lessons}</p>
-                <p>Lessons</p>
+      {filteredCourses.length === 0 ? (
+        <div className="flex min-h-[30vh] items-center justify-center">
+          <p className="text-sm font-semibold text-stone-500">No courses found</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {filteredCourses.map((course) => (
+            <Card key={course.id} className="space-y-4">
+              <img
+                src={course.thumbnailUrl || 'https://via.placeholder.com/400x200'}
+                alt={course.title}
+                className="h-48 w-full rounded-2xl object-cover"
+              />
+              <div className="flex flex-wrap gap-3">
+                <Badge variant="info">
+                  {typeof course.category === 'string' ? course.category : categories.find((c) => c.id === course.category)?.name || 'Uncategorized'}
+                </Badge>
+                <Badge variant="success">{course.level}</Badge>
               </div>
-              <div>
-                <p className="text-2xl font-display text-stone-900">{course.stats.duration}</p>
-                <p>Duration</p>
+              <h2 className="text-2xl font-display font-semibold text-stone-900">{course.title}</h2>
+              <p className="text-sm text-stone-500">{course.description}</p>
+              <div className="grid grid-cols-3 gap-4 text-center text-sm font-semibold text-stone-600">
+                <div>
+                  <p className="text-2xl font-display text-stone-900">{course.stats?.lessons || 0}</p>
+                  <p>Lessons</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-display text-stone-900">{course.stats?.duration || 'N/A'}</p>
+                  <p>Duration</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-display text-stone-900">{course.stats?.students || 0}</p>
+                  <p>Learners</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-display text-stone-900">{course.stats.students}</p>
-                <p>Learners</p>
-              </div>
-            </div>
-            <Button asChild fullWidth className="py-3 text-base">
-              <Link to={`/courses/${course.id}`}>See details</Link>
-            </Button>
-          </Card>
-        ))}
-      </div>
+              <Button asChild fullWidth className="py-3 text-base">
+                <Link to={`/courses/${course.id}`}>See details</Link>
+              </Button>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
 export default CoursesPage;
+
 

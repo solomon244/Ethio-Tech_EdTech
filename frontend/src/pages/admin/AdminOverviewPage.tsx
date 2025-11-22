@@ -1,12 +1,53 @@
+import { useEffect, useState } from 'react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import { fetchDashboardStats } from '../../services/adminService';
+import type { DashboardStats } from '../../services/adminService';
 
 const AdminOverviewPage = () => {
-  const insights = [
-    { label: 'Total users', value: '4,820', helper: '+8% vs last month' },
-    { label: 'Pending instructors', value: '18', helper: 'Awaiting review' },
-    { label: 'Active courses', value: '64', helper: '12 in draft' },
-  ];
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const statsData = await fetchDashboardStats();
+        setStats(statsData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard stats');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadStats();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[30vh] items-center justify-center">
+        <p className="text-sm font-semibold text-stone-500">Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[30vh] items-center justify-center">
+        <p className="text-sm font-semibold text-danger">Error: {error}</p>
+      </div>
+    );
+  }
+
+  const insights = stats
+    ? [
+        { label: 'Total users', value: stats.userCount.toLocaleString(), helper: 'Registered users' },
+        { label: 'Pending instructors', value: stats.instructorPending.toString(), helper: 'Awaiting review' },
+        { label: 'Active courses', value: stats.courseCount.toString(), helper: `${stats.enrollmentCount} enrollments` },
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
@@ -31,4 +72,5 @@ const AdminOverviewPage = () => {
 };
 
 export default AdminOverviewPage;
+
 
