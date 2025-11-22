@@ -22,6 +22,19 @@ app.use(cookieParser());
 
 app.use('/uploads', express.static(path.resolve(env.uploadDir)));
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Ethio Tech Hub API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      docs: 'See API documentation for available endpoints',
+    },
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
