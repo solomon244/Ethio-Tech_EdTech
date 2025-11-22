@@ -35,3 +35,4 @@ quizAttemptSchema.index({ quiz: 1, student: 1 });
 
 module.exports = mongoose.model('QuizAttempt', quizAttemptSchema);
 
+

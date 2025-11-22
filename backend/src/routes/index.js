@@ -7,6 +7,7 @@ const enrollmentRoutes = require('./enrollmentRoutes');
 const progressRoutes = require('./progressRoutes');
 const adminRoutes = require('./adminRoutes');
 const userRoutes = require('./userRoutes');
+const uploadRoutes = require('./uploadRoutes');
 
 const router = express.Router();
 
@@ -18,6 +19,8 @@ router.use('/enrollments', enrollmentRoutes);
 router.use('/progress', progressRoutes);
 router.use('/admin', adminRoutes);
 router.use('/users', userRoutes);
+router.use('/upload', uploadRoutes);
 
 module.exports = router;
+
 

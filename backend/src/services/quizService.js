@@ -53,9 +53,90 @@ const fetchQuizHistory = async (studentId) => {
   return new ApiResponse(200, 'Quiz history fetched', { attempts });
 };
 
+const getQuizByLesson = async (lessonId) => {
+  const quiz = await Quiz.findOne({ lesson: lessonId }).populate('lesson', 'title');
+  if (!quiz) {
+    throw new AppError('Quiz not found for this lesson', 404);
+  }
+  return new ApiResponse(200, 'Quiz fetched', { quiz });
+};
+
+const getQuiz = async (quizId) => {
+  const quiz = await Quiz.findById(quizId).populate('lesson', 'title course');
+  if (!quiz) {
+    throw new AppError('Quiz not found', 404);
+  }
+  return new ApiResponse(200, 'Quiz fetched', { quiz });
+};
+
+const updateQuiz = async (quizId, payload, userId) => {
+  const quiz = await Quiz.findById(quizId).populate('lesson');
+  if (!quiz) {
+    throw new AppError('Quiz not found', 404);
+  }
+
+  // Check if user is the instructor of the course
+  const Course = require('../models/Course');
+  const course = await Course.findOne({ _id: quiz.lesson.course, instructor: userId });
+  if (!course) {
+    throw new AppError('Unauthorized', 403);
+  }
+
+  Object.assign(quiz, payload);
+  await quiz.save();
+
+  return new ApiResponse(200, 'Quiz updated successfully', { quiz });
+};
+
+const deleteQuiz = async (quizId, userId) => {
+  const quiz = await Quiz.findById(quizId).populate('lesson');
+  if (!quiz) {
+    throw new AppError('Quiz not found', 404);
+  }
+
+  // Check if user is the instructor of the course
+  const Course = require('../models/Course');
+  const course = await Course.findOne({ _id: quiz.lesson.course, instructor: userId });
+  if (!course) {
+    throw new AppError('Unauthorized', 403);
+  }
+
+  // Delete all attempts for this quiz
+  await QuizAttempt.deleteMany({ quiz: quiz._id });
+  await quiz.deleteOne();
+
+  return new ApiResponse(200, 'Quiz deleted successfully');
+};
+
+const getQuizAttempts = async (quizId, userId) => {
+  const quiz = await Quiz.findById(quizId).populate('lesson');
+  if (!quiz) {
+    throw new AppError('Quiz not found', 404);
+  }
+
+  // Check if user is the instructor of the course
+  const Course = require('../models/Course');
+  const course = await Course.findOne({ _id: quiz.lesson.course, instructor: userId });
+  if (!course) {
+    throw new AppError('Unauthorized', 403);
+  }
+
+  const attempts = await QuizAttempt.find({ quiz: quizId })
+    .populate('student', 'firstName lastName email')
+    .sort('-createdAt');
+
+  return new ApiResponse(200, 'Quiz attempts fetched', { attempts });
+};
+
 module.exports = {
   createQuiz,
   submitQuiz,
   fetchQuizHistory,
+  getQuizByLesson,
+  getQuiz,
+  updateQuiz,
+  deleteQuiz,
+  getQuizAttempts,
 };
+
 

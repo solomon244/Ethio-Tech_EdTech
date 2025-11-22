@@ -25,5 +25,46 @@ const env = {
   verifyTokenExpiryMinutes: Number(process.env.VERIFY_TOKEN_EXPIRY_MINUTES) || 60,
 };
 
+// Production environment validation
+if (env.nodeEnv === 'production') {
+  const errors = [];
+
+  if (env.jwtSecret === 'fallback_jwt_secret' || env.jwtSecret.length < 32) {
+    errors.push('❌ CRITICAL: JWT_SECRET must be set and at least 32 characters long in production!');
+  }
+
+  if (env.jwtRefreshSecret === 'fallback_refresh_secret' || env.jwtRefreshSecret.length < 32) {
+    errors.push('❌ CRITICAL: JWT_REFRESH_SECRET must be set and at least 32 characters long in production!');
+  }
+
+  if (!env.mongoUri || env.mongoUri.trim() === '') {
+    errors.push('❌ CRITICAL: MONGO_URI must be set in production!');
+  }
+
+  if (env.clientUrl === 'http://localhost:5173') {
+    errors.push('⚠️  WARNING: CLIENT_URL is still set to localhost. Update for production!');
+  }
+
+  if (errors.length > 0) {
+    console.error('\n🚨 PRODUCTION ENVIRONMENT VALIDATION FAILED:\n');
+    errors.forEach((error) => console.error(`  ${error}`));
+    console.error('\n');
+    if (errors.some((e) => e.includes('CRITICAL'))) {
+      process.exit(1);
+    }
+  }
+}
+
+// Development warnings
+if (env.nodeEnv === 'development') {
+  if (env.jwtSecret === 'fallback_jwt_secret' || env.jwtRefreshSecret === 'fallback_refresh_secret') {
+    console.warn('⚠️  Warning: Using fallback JWT secrets. Set JWT_SECRET and JWT_REFRESH_SECRET in production!');
+  }
+  if (!env.mongoUri || env.mongoUri.trim() === '') {
+    console.warn('⚠️  Warning: MONGO_URI not set in environment variables');
+  }
+}
+
 module.exports = env;
+
 

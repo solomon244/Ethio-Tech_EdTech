@@ -46,10 +46,14 @@ const register = async (payload) => {
 
   const user = await User.create(payload);
 
-  await emailService.queueEmail({
+  // Send welcome email (non-blocking - won't fail registration if email fails)
+  emailService.queueEmail({
     to: user.email,
     subject: 'Welcome to Ethio Tech Hub',
     html: `<p>Selam ${user.firstName}, welcome to Ethio Tech Hub!</p>`,
+  }).catch((error) => {
+    // Email failure is logged but doesn't affect registration
+    console.error('Failed to send welcome email:', error.message);
   });
 
   return new ApiResponse(201, 'Registration successful', {
@@ -152,10 +156,13 @@ const requestPasswordReset = async (email) => {
     expiresAt,
   });
 
-  await emailService.queueEmail({
+  // Send password reset email (non-blocking)
+  emailService.queueEmail({
     to: user.email,
     subject: 'Reset your Ethio Tech Hub password',
     html: `<p>Use this code to reset your password: <strong>${resetToken}</strong></p>`,
+  }).catch((error) => {
+    console.error('Failed to send password reset email:', error.message);
   });
 
   return new ApiResponse(200, 'Password reset link sent');
@@ -198,10 +205,13 @@ const requestEmailVerification = async (userId) => {
     expiresAt,
   });
 
-  await emailService.queueEmail({
+  // Send verification email (non-blocking)
+  emailService.queueEmail({
     to: user.email,
     subject: 'Verify your Ethio Tech Hub email',
     html: `<p>Here is your verification code: <strong>${token}</strong></p>`,
+  }).catch((error) => {
+    console.error('Failed to send verification email:', error.message);
   });
 
   return new ApiResponse(200, 'Verification email sent');
@@ -235,4 +245,5 @@ module.exports = {
   requestEmailVerification,
   verifyEmail,
 };
+
 

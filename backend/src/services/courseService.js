@@ -5,14 +5,35 @@ const AppError = require('../utils/appError');
 const ApiResponse = require('../utils/apiResponse');
 
 const createCourse = async (payload, instructorId) => {
-  const slug = slugify(payload.title, { lower: true, strict: true });
+  // Check if category exists
+  const Category = require('../models/Category');
+  const category = await Category.findById(payload.category);
+  if (!category) {
+    throw new AppError('Category not found', 404);
+  }
+
+  // Generate unique slug
+  let slug = slugify(payload.title, { lower: true, strict: true });
+  let slugExists = await Course.findOne({ slug });
+  let counter = 1;
+  while (slugExists) {
+    slug = `${slugify(payload.title, { lower: true, strict: true })}-${counter}`;
+    slugExists = await Course.findOne({ slug });
+    counter++;
+  }
+
   const course = await Course.create({
     ...payload,
     slug,
     instructor: instructorId,
+    isPublished: false, // Always start as unpublished
   });
 
-  return new ApiResponse(201, 'Course created', { course });
+  // Populate category and instructor for response
+  await course.populate('category', 'name description');
+  await course.populate('instructor', 'firstName lastName');
+
+  return new ApiResponse(201, 'Course created successfully', { course });
 };
 
 const listCourses = async (query = {}) => {
@@ -57,13 +78,36 @@ const updateCourse = async (id, payload, userId) => {
     throw new AppError('Course not found or not authorized', 404);
   }
 
-  Object.assign(course, payload);
-  if (payload.title) {
-    course.slug = slugify(payload.title, { lower: true, strict: true });
+  // If category is being updated, validate it exists
+  if (payload.category) {
+    const Category = require('../models/Category');
+    const category = await Category.findById(payload.category);
+    if (!category) {
+      throw new AppError('Category not found', 404);
+    }
   }
+
+  // Update slug if title changed
+  if (payload.title && payload.title !== course.title) {
+    let slug = slugify(payload.title, { lower: true, strict: true });
+    let slugExists = await Course.findOne({ slug, _id: { $ne: id } });
+    let counter = 1;
+    while (slugExists) {
+      slug = `${slugify(payload.title, { lower: true, strict: true })}-${counter}`;
+      slugExists = await Course.findOne({ slug, _id: { $ne: id } });
+      counter++;
+    }
+    payload.slug = slug;
+  }
+
+  Object.assign(course, payload);
   await course.save();
 
-  return new ApiResponse(200, 'Course updated', { course });
+  // Populate for response
+  await course.populate('category', 'name description');
+  await course.populate('instructor', 'firstName lastName');
+
+  return new ApiResponse(200, 'Course updated successfully', { course });
 };
 
 const deleteCourse = async (id, userId) => {
@@ -78,11 +122,40 @@ const deleteCourse = async (id, userId) => {
   return new ApiResponse(200, 'Course removed');
 };
 
+const publishCourse = async (id, userId, isPublished) => {
+  const course = await Course.findOne({ _id: id, instructor: userId });
+  if (!course) {
+    throw new AppError('Course not found or not authorized', 404);
+  }
+
+  // Validation: Course must have at least one lesson to be published
+  if (isPublished) {
+    const Lesson = require('../models/Lesson');
+    const lessonCount = await Lesson.countDocuments({ course: course._id });
+    if (lessonCount === 0) {
+      throw new AppError('Cannot publish course without lessons', 400);
+    }
+  }
+
+  course.isPublished = isPublished;
+  await course.save();
+
+  // Populate for response
+  await course.populate('category', 'name description');
+  await course.populate('instructor', 'firstName lastName');
+
+  return new ApiResponse(200, isPublished ? 'Course published successfully' : 'Course unpublished successfully', {
+    course,
+  });
+};
+
 module.exports = {
   createCourse,
   listCourses,
   getCourse,
   updateCourse,
   deleteCourse,
+  publishCourse,
 };
+
 

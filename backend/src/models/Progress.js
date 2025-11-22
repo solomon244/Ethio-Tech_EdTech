@@ -37,3 +37,4 @@ progressSchema.index({ student: 1, lesson: 1 }, { unique: true });
 
 module.exports = mongoose.model('Progress', progressSchema);
 
+

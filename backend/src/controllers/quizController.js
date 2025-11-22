@@ -20,3 +20,29 @@ exports.quizHistory = asyncHandler(async (req, res) => {
   res.status(response.statusCode).json(response);
 });
 
+exports.getQuizByLesson = asyncHandler(async (req, res) => {
+  const response = await quizService.getQuizByLesson(req.params.lessonId);
+  res.status(response.statusCode).json(response);
+});
+
+exports.getQuiz = asyncHandler(async (req, res) => {
+  const response = await quizService.getQuiz(req.params.quizId);
+  res.status(response.statusCode).json(response);
+});
+
+exports.updateQuiz = asyncHandler(async (req, res) => {
+  const response = await quizService.updateQuiz(req.params.quizId, req.body, req.user.id);
+  res.status(response.statusCode).json(response);
+});
+
+exports.deleteQuiz = asyncHandler(async (req, res) => {
+  const response = await quizService.deleteQuiz(req.params.quizId, req.user.id);
+  res.status(response.statusCode).json(response);
+});
+
+exports.getQuizAttempts = asyncHandler(async (req, res) => {
+  const response = await quizService.getQuizAttempts(req.params.quizId, req.user.id);
+  res.status(response.statusCode).json(response);
+});
+
+

@@ -12,3 +12,4 @@ router.get('/:courseId', progressController.getCourseProgress);
 
 module.exports = router;
 
+

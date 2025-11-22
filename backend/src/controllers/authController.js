@@ -41,3 +41,4 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
   res.status(response.statusCode).json(response);
 });
 
+

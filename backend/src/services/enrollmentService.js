@@ -26,8 +26,48 @@ const listEnrollments = async (studentId) => {
   return new ApiResponse(200, 'Enrollments fetched', { enrollments });
 };
 
+const getEnrollment = async (enrollmentId, studentId) => {
+  const enrollment = await Enrollment.findOne({ _id: enrollmentId, student: studentId })
+    .populate('course')
+    .populate('student', 'firstName lastName email');
+
+  if (!enrollment) {
+    throw new AppError('Enrollment not found', 404);
+  }
+
+  return new ApiResponse(200, 'Enrollment fetched', { enrollment });
+};
+
+const deleteEnrollment = async (enrollmentId, studentId) => {
+  const enrollment = await Enrollment.findOne({ _id: enrollmentId, student: studentId });
+  if (!enrollment) {
+    throw new AppError('Enrollment not found', 404);
+  }
+
+  await enrollment.deleteOne();
+  return new ApiResponse(200, 'Enrollment removed successfully');
+};
+
+const getCourseEnrollments = async (courseId, instructorId) => {
+  // Verify instructor owns the course
+  const course = await Course.findOne({ _id: courseId, instructor: instructorId });
+  if (!course) {
+    throw new AppError('Course not found or unauthorized', 404);
+  }
+
+  const enrollments = await Enrollment.find({ course: courseId })
+    .populate('student', 'firstName lastName email')
+    .sort('-createdAt');
+
+  return new ApiResponse(200, 'Course enrollments fetched', { enrollments });
+};
+
 module.exports = {
   enrollStudent,
   listEnrollments,
+  getEnrollment,
+  deleteEnrollment,
+  getCourseEnrollments,
 };
+
 

@@ -19,3 +19,19 @@ exports.updateInstructorStatus = asyncHandler(async (req, res) => {
   res.status(response.statusCode).json(response);
 });
 
+exports.getUser = asyncHandler(async (req, res) => {
+  const response = await adminService.getUser(req.params.userId);
+  res.status(response.statusCode).json(response);
+});
+
+exports.updateUser = asyncHandler(async (req, res) => {
+  const response = await adminService.updateUser(req.params.userId, req.body);
+  res.status(response.statusCode).json(response);
+});
+
+exports.deleteUser = asyncHandler(async (req, res) => {
+  const response = await adminService.deleteUser(req.params.userId);
+  res.status(response.statusCode).json(response);
+});
+
+
