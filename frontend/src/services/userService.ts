@@ -9,3 +9,4 @@ export const fetchProfile = async (): Promise<User> => {
   return payload.user;
 };
 
+
