@@ -31,7 +31,8 @@ export interface AuthTokens {
 }
 
 export interface Category {
-  id: string;
+  _id?: string;
+  id?: string; // For compatibility
   name: string;
   description: string;
   icon?: string;

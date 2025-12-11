@@ -21,6 +21,10 @@ export interface UpdateProfilePayload {
     website?: string;
   };
   profileImage?: string;
+  instructorProfile?: {
+    experienceYears?: number;
+    highlight?: string;
+  };
 }
 
 export const updateProfile = async (payload: UpdateProfilePayload): Promise<User> => {

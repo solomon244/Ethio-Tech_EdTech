@@ -18,9 +18,11 @@ import StudentCoursesPage from '../pages/student/StudentCoursesPage';
 import StudentProgressPage from '../pages/student/StudentProgressPage';
 import StudentQuizzesPage from '../pages/student/StudentQuizzesPage';
 import StudentProfilePage from '../pages/student/StudentProfilePage';
+import StudentLessonPage from '../pages/student/StudentLessonPage';
 import InstructorOverviewPage from '../pages/instructor/InstructorOverviewPage';
 import InstructorCoursesPage from '../pages/instructor/InstructorCoursesPage';
 import InstructorCreateCoursePage from '../pages/instructor/InstructorCreateCoursePage';
+import InstructorManageCoursePage from '../pages/instructor/InstructorManageCoursePage';
 import InstructorStudentsPage from '../pages/instructor/InstructorStudentsPage';
 import InstructorProfilePage from '../pages/instructor/InstructorProfilePage';
 import AdminOverviewPage from '../pages/admin/AdminOverviewPage';
@@ -37,6 +39,13 @@ const AppRoutes = () => (
       <Route path="/courses/:courseId" element={<CourseDetailPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/contact" element={<ContactPage />} />
+    </Route>
+
+    <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+      <Route
+        path="/courses/:courseId/lessons/:lessonId"
+        element={<StudentLessonPage />}
+      />
     </Route>
 
     <Route element={<AuthLayout />}>
@@ -111,6 +120,14 @@ const AppRoutes = () => (
         element={
           <DashboardLayout title="Create Course" subtitle="Publish a new learning experience">
             <InstructorCreateCoursePage />
+          </DashboardLayout>
+        }
+      />
+      <Route
+        path="/instructor/courses/:courseId/manage"
+        element={
+          <DashboardLayout title="Manage Course" subtitle="Add lessons and manage content">
+            <InstructorManageCoursePage />
           </DashboardLayout>
         }
       />

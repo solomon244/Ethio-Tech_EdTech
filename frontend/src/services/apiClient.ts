@@ -92,6 +92,18 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Handle validation errors (422) with detailed field errors
+    // Backend returns errors in meta.errors or data.errors
+    if (status === 422) {
+      const validationErrors = error.response?.data?.meta?.errors || error.response?.data?.data?.errors;
+      if (validationErrors && Array.isArray(validationErrors)) {
+        const errorMessages = validationErrors.map((err: { field: string; message: string }) => 
+          `${err.field}: ${err.message}`
+        ).join(', ');
+        return Promise.reject(new Error(errorMessages || error.response?.data?.message || 'Validation failed'));
+      }
+    }
+    
     const message = error.response?.data?.message || 'Something went wrong';
     return Promise.reject(new Error(message));
   }

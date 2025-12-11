@@ -12,18 +12,34 @@ exports.getProfile = asyncHandler(async (req, res) => {
 });
 
 exports.updateProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return res.status(404).json(new ApiResponse(404, 'User not found'));
+  }
+
+  // Update top-level fields
   const allowedFields = ['firstName', 'lastName', 'bio', 'skills', 'socialLinks', 'profileImage'];
-  const updates = {};
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {
-      updates[field] = req.body[field];
+      user[field] = req.body[field];
     }
   });
 
-  const user = await User.findByIdAndUpdate(req.user.id, updates, {
-    new: true,
-    runValidators: true,
-  });
+  // Handle instructorProfile updates (nested fields)
+  if (req.body.instructorProfile !== undefined) {
+    if (!user.instructorProfile) {
+      user.instructorProfile = {};
+    }
+    if (req.body.instructorProfile.experienceYears !== undefined) {
+      user.instructorProfile.experienceYears = req.body.instructorProfile.experienceYears;
+    }
+    if (req.body.instructorProfile.highlight !== undefined) {
+      user.instructorProfile.highlight = req.body.instructorProfile.highlight;
+    }
+    // Note: status can only be updated by admins
+  }
+
+  await user.save();
 
   res.json(new ApiResponse(200, 'Profile updated', { user }));
 });

@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 const router = require('./routes');
 const env = require('./config/env');
 const logger = require('./utils/logger');
@@ -9,9 +11,27 @@ const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
+// CORS configuration - allow both local development and production origins
+const allowedOrigins = [
+  'http://localhost:5173', // Local development
+  env.clientUrl, // Production URL from environment
+].filter(Boolean); // Remove any undefined/null values
+
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, etc.) in development
+      if (!origin && env.nodeEnv === 'development') {
+        return callback(null, true);
+      }
+      
+      // Check if origin is in allowed list
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
@@ -22,6 +42,12 @@ app.use(cookieParser());
 
 app.use('/uploads', express.static(path.resolve(env.uploadDir)));
 
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Ethio Tech Hub API Documentation',
+}));
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
@@ -30,11 +56,37 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       health: '/api/health',
-      docs: 'See API documentation for available endpoints',
+      docs: '/api-docs',
+      swagger: '/api-docs',
+    },
+    documentation: {
+      swagger: `${req.protocol}://${req.get('host')}/api-docs`,
+      description: 'Interactive API documentation with Swagger UI',
     },
   });
 });
 
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Service is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ */
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

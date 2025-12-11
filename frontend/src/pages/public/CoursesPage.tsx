@@ -32,8 +32,24 @@ const CoursesPage = () => {
           fetchCourses({ isPublished: true }),
           fetchCategories(),
         ]);
+        console.log('Loaded courses:', coursesData);
+        console.log('Courses count:', coursesData.length);
+        console.log('Loaded categories:', categoriesData);
         setCourses(coursesData);
         setCategories(categoriesData);
+        
+        // If no published courses, try to fetch all courses to see if any exist
+        if (coursesData.length === 0) {
+          try {
+            const allCourses = await fetchCourses();
+            console.log('Total courses (published + unpublished):', allCourses.length);
+            if (allCourses.length > 0) {
+              console.warn('Courses exist but are not published. Instructors need to publish courses for them to appear here.');
+            }
+          } catch (err) {
+            // Ignore error, just for debugging
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load courses');
         console.error('Failed to load courses:', err);
@@ -48,14 +64,25 @@ const CoursesPage = () => {
     { label: 'All categories', value: 'all' },
     ...categories.map((cat) => ({
       label: cat.name,
-      value: cat.id,
+      value: (cat as any)._id || cat.id || '',
     })),
   ];
 
   const filteredCourses = useMemo(() => {
     return courses.filter((course) => {
       const levelMatch = level === 'all' || course.level === level;
-      const categoryMatch = category === 'all' || (typeof course.category === 'object' ? course.category.id === category : course.category === category);
+      
+      // Handle category matching - category can be object or string ID
+      let categoryMatch = true;
+      if (category !== 'all') {
+        if (typeof course.category === 'object') {
+          const categoryId = (course.category as any)._id || course.category.id || '';
+          categoryMatch = categoryId === category;
+        } else {
+          categoryMatch = course.category === category;
+        }
+      }
+      
       return levelMatch && categoryMatch;
     });
   }, [courses, level, category]);
@@ -108,13 +135,30 @@ const CoursesPage = () => {
       </div>
 
       {filteredCourses.length === 0 ? (
-        <div className="text-center text-stone-500">No courses found</div>
+        <div className="text-center space-y-4 py-12">
+          <div className="mx-auto max-w-md space-y-3">
+            <p className="text-lg font-semibold text-stone-700">No courses available</p>
+            {courses.length === 0 ? (
+              <div className="space-y-2 text-sm text-stone-500">
+                <p>There are no published courses available at the moment.</p>
+                <p className="text-xs">
+                  Instructors need to create and publish courses for them to appear here.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-stone-500">
+                {courses.length} course(s) available, but none match the current filters.
+                Try adjusting your filters above.
+              </p>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
           {filteredCourses.map((course) => {
             const categoryName = typeof course.category === 'object' ? course.category.name : course.category;
             return (
-              <Card key={course.id} className="space-y-4">
+              <Card key={course._id || course.id} className="space-y-4">
                 <img src={course.thumbnailUrl || '/placeholder-course.jpg'} alt={course.title} className="h-48 w-full rounded-2xl object-cover" />
                 <div className="flex flex-wrap gap-3">
                   <Badge variant="info">{categoryName}</Badge>

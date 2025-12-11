@@ -33,7 +33,15 @@ export const fetchCourses = async (filters?: {
   level?: string;
   isPublished?: boolean;
 }): Promise<Course[]> => {
-  const response = await apiClient.get('/courses', { params: filters });
+  // Convert boolean to string for backend compatibility
+  const params: Record<string, string> = {};
+  if (filters?.category) params.category = filters.category;
+  if (filters?.level) params.level = filters.level;
+  if (filters?.isPublished !== undefined) {
+    params.isPublished = filters.isPublished.toString();
+  }
+  
+  const response = await apiClient.get('/courses', { params });
   return unwrap<{ courses: Course[] }>(response).courses;
 };
 
