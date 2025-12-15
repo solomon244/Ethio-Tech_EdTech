@@ -12,16 +12,21 @@ const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const app = express();
 
 // CORS configuration - allow both local development and production origins
-const allowedOrigins = [
-  'http://localhost:5173', // Local development
-  env.clientUrl, // Production URL from environment
-].filter(Boolean); // Remove any undefined/null values
+// Supports comma-separated CLIENT_URL values for multiple frontends.
+const allowedOrigins = (env.clientUrl || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+// Always include localhost for local dev
+if (!allowedOrigins.includes('http://localhost:5173')) {
+  allowedOrigins.push('http://localhost:5173');
+}
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, Postman, etc.) in development
-      if (!origin && env.nodeEnv === 'development') {
+      // Allow requests with no origin (like server-to-server, health checks, Postman)
+      if (!origin) {
         return callback(null, true);
       }
       
