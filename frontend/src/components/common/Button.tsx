@@ -3,9 +3,11 @@ import { cloneElement, isValidElement } from 'react';
 import type { ButtonHTMLAttributes, ReactNode, ReactElement } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  size?: ButtonSize;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   fullWidth?: boolean;
@@ -22,17 +24,30 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost: 'bg-transparent text-stone-600 hover:text-primary focus-visible:outline-primary',
 };
 
+const sizeStyles: Record<ButtonSize, string> = {
+  sm: 'text-xs px-3 py-1.5 rounded-lg',
+  md: 'text-sm px-4 py-2',
+  lg: 'text-base px-5 py-3',
+};
+
 const Button = ({
   children,
   className,
   variant = 'primary',
+  size = 'md',
   leftIcon,
   rightIcon,
   fullWidth,
   asChild,
   ...props
 }: ButtonProps) => {
-  const classes = clsx(baseStyles, variantStyles[variant], fullWidth && 'w-full', className);
+  const classes = clsx(
+    baseStyles,
+    variantStyles[variant],
+    sizeStyles[size],
+    fullWidth && 'w-full',
+    className
+  );
 
   if (asChild && isValidElement(children)) {
     return cloneElement(children as ReactElement, {

@@ -21,7 +21,6 @@ const CourseDetailPage = () => {
   const [enrolling, setEnrolling] = useState(false);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [progress, setProgress] = useState<Progress[]>([]);
-  const [enrollmentLoading, setEnrollmentLoading] = useState(false);
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -46,7 +45,6 @@ const CourseDetailPage = () => {
     const loadEnrollmentStatus = async () => {
       if (!courseId || !user || user.role !== 'student') return;
       try {
-        setEnrollmentLoading(true);
         const enrollments = await fetchMyEnrollments();
         const foundEnrollment = enrollments.find((e) => {
           const eCourseId = typeof e.course === 'object' ? (e.course._id || e.course.id) : e.course;
@@ -60,8 +58,6 @@ const CourseDetailPage = () => {
         }
       } catch (err) {
         console.error('Failed to load enrollment status:', err);
-      } finally {
-        setEnrollmentLoading(false);
       }
     };
     loadEnrollmentStatus();

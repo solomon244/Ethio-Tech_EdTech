@@ -216,7 +216,7 @@ const StudentCoursesPage = () => {
       {enrollments.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2">
           <InputField
-            label=""
+            label="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search courses..."

@@ -3,7 +3,7 @@ import Card from '../../components/common/Card';
 import { fetchCourseEnrollments } from '../../services/enrollmentService';
 import { fetchCourses } from '../../services/courseService';
 import { useAuth } from '../../hooks/useAuth';
-import type { Enrollment, Course } from '../../types';
+import type { Enrollment } from '../../types';
 
 interface StudentEnrollment {
   student: {

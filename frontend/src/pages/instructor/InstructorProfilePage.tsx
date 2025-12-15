@@ -1,13 +1,12 @@
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import InputField from '../../components/common/InputField';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import { fetchProfile, updateProfile } from '../../services/userService';
 import { useAuth } from '../../hooks/useAuth';
-import type { User } from '../../types';
 
 const InstructorProfilePage = () => {
-  const { user: authUser, setUser } = useAuth();
+  const { refreshProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,12 +111,9 @@ const InstructorProfilePage = () => {
         }
       }
 
-      const updatedUser = await updateProfile(payload);
-      
-      // Update auth context with new user data
-      if (setUser) {
-        setUser(updatedUser);
-      }
+      await updateProfile(payload);
+      // Refresh auth context with new user data
+      await refreshProfile();
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

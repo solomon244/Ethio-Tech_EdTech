@@ -1,19 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  FaArrowRight, 
-  FaPlayCircle, 
-  FaShieldAlt, 
-  FaClock, 
-  FaBook, 
-  FaUser, 
+import {
+  FaArrowRight,
+  FaPlayCircle,
+  FaShieldAlt,
+  FaClock,
+  FaBook,
+  FaUser,
   FaStar,
   FaGraduationCap,
   FaUsers,
   FaTrophy,
-  FaCheckCircle,
   FaQuoteLeft,
-  FaRocket
+  FaRocket,
 } from 'react-icons/fa';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
@@ -353,7 +352,7 @@ const HomePage = () => {
           </p>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {valueProps.map((item, index) => (
+          {valueProps.map((item) => (
             <Card 
               key={item.title} 
               className={`space-y-4 group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br ${item.color}`}

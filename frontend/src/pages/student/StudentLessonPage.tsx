@@ -3,16 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import ProgressBar from '../../components/common/ProgressBar';
 import { fetchCourse } from '../../services/courseService';
 import { fetchCourseProgress, updateProgress } from '../../services/progressService';
-import { useAuth } from '../../hooks/useAuth';
 import type { Course, Lesson, Progress } from '../../types';
 
 const StudentLessonPage = () => {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);

@@ -127,7 +127,7 @@ const InstructorCreateCoursePage = () => {
       }
 
       // Create course
-      const course = await createCourse(payload);
+      await createCourse(payload);
 
       // Navigate to course edit page or courses list
       navigate(`/instructor/courses`, { replace: true });
@@ -312,6 +312,7 @@ const InstructorCreateCoursePage = () => {
       <label className="block space-y-2">
         <span className="text-sm font-medium text-stone-600">Tags (comma-separated)</span>
         <InputField
+          label="Tags"
           value={tagsText}
           onChange={(e) => setTagsText(e.target.value)}
           placeholder="react, javascript, web-development"

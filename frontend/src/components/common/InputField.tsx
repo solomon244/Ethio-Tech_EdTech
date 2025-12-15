@@ -2,15 +2,16 @@ import type { InputHTMLAttributes, ReactNode } from 'react';
 import clsx from 'clsx';
 
 interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   hint?: string;
+  helperText?: string;
   icon?: ReactNode;
 }
 
-const InputField = ({ label, hint, icon, className, ...props }: InputFieldProps) => {
+const InputField = ({ label, hint, helperText, icon, className, ...props }: InputFieldProps) => {
   return (
     <label className="block space-y-2">
-      <span className="text-sm font-medium text-stone-600">{label}</span>
+      {label && <span className="text-sm font-medium text-stone-600">{label}</span>}
       <div
         className={clsx(
           'flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-3 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20',
@@ -24,6 +25,7 @@ const InputField = ({ label, hint, icon, className, ...props }: InputFieldProps)
         />
       </div>
       {hint && <p className="text-xs text-stone-400">{hint}</p>}
+      {helperText && !hint && <p className="text-xs text-stone-400">{helperText}</p>}
     </label>
   );
 };
